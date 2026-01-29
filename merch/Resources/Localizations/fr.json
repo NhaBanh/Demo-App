@@ -1,0 +1,52 @@
+{
+    "nav": {
+        "home": "Accueil",
+        "cart": "Panier",
+        "profile": "Profil",
+        "settings": "Paramètres"
+    },
+    "products": {
+        "title": "Boutique de Marchandises",
+        "loading": "Chargement des Produits...",
+        "empty": "Aucun produit disponible",
+        "error": "Échec du chargement des produits",
+        "retry": "Réessayer"
+    },
+    "product": {
+        "quantity": "Quantité",
+        "addToCart": "Ajouter au Panier",
+        "price": "Prix",
+        "description": "Description",
+        "category": "Catégorie"
+    },
+    "cart": {
+        "title": "Panier d'Achat",
+        "empty": "Votre panier est vide",
+        "total": "Total",
+        "checkout": "Passer la Commande",
+        "remove": "Supprimer",
+        "clear": "Vider le Panier"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "language": "Langue",
+        "theme": "Thème",
+        "notifications": "Notifications",
+        "about": "À Propos"
+    },
+    "common": {
+        "ok": "OK",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "delete": "Supprimer",
+        "edit": "Modifier",
+        "done": "Terminé",
+        "close": "Fermer",
+        "search": "Rechercher"
+    },
+    "error": {
+        "network": "Erreur Réseau",
+        "unknown": "Erreur Inconnue",
+        "tryAgain": "Veuillez réessayer"
+    }
+}

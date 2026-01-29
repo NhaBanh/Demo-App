@@ -1,0 +1,52 @@
+{
+    "nav": {
+        "home": "Home",
+        "cart": "Cart",
+        "profile": "Profile",
+        "settings": "Settings"
+    },
+    "products": {
+        "title": "Merch Shop",
+        "loading": "Loading Products...",
+        "empty": "No products available",
+        "error": "Failed to load products",
+        "retry": "Retry"
+    },
+    "product": {
+        "quantity": "Quantity",
+        "addToCart": "Add to Cart",
+        "price": "Price",
+        "description": "Description",
+        "category": "Category"
+    },
+    "cart": {
+        "title": "Shopping Cart",
+        "empty": "Your cart is empty",
+        "total": "Total",
+        "checkout": "Checkout",
+        "remove": "Remove",
+        "clear": "Clear Cart"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "notifications": "Notifications",
+        "about": "About"
+    },
+    "common": {
+        "ok": "OK",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "done": "Done",
+        "close": "Close",
+        "search": "Search"
+    },
+    "error": {
+        "network": "Network Error",
+        "unknown": "Unknown Error",
+        "tryAgain": "Please try again"
+    }
+}

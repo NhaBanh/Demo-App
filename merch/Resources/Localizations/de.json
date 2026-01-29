@@ -1,0 +1,52 @@
+{
+    "nav": {
+        "home": "Startseite",
+        "cart": "Warenkorb",
+        "profile": "Profil",
+        "settings": "Einstellungen"
+    },
+    "products": {
+        "title": "Merchandise-Shop",
+        "loading": "Produkte werden geladen...",
+        "empty": "Keine Produkte verfügbar",
+        "error": "Fehler beim Laden der Produkte",
+        "retry": "Erneut versuchen"
+    },
+    "product": {
+        "quantity": "Menge",
+        "addToCart": "In den Warenkorb",
+        "price": "Preis",
+        "description": "Beschreibung",
+        "category": "Kategorie"
+    },
+    "cart": {
+        "title": "Einkaufswagen",
+        "empty": "Ihr Warenkorb ist leer",
+        "total": "Gesamt",
+        "checkout": "Zur Kasse",
+        "remove": "Entfernen",
+        "clear": "Warenkorb leeren"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "language": "Sprache",
+        "theme": "Design",
+        "notifications": "Benachrichtigungen",
+        "about": "Über"
+    },
+    "common": {
+        "ok": "OK",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "done": "Fertig",
+        "close": "Schließen",
+        "search": "Suchen"
+    },
+    "error": {
+        "network": "Netzwerkfehler",
+        "unknown": "Unbekannter Fehler",
+        "tryAgain": "Bitte versuchen Sie es erneut"
+    }
+}

@@ -1,0 +1,52 @@
+{
+    "nav": {
+        "home": "Inicio",
+        "cart": "Carrito",
+        "profile": "Perfil",
+        "settings": "Configuración"
+    },
+    "products": {
+        "title": "Tienda de Mercancía",
+        "loading": "Cargando Productos...",
+        "empty": "No hay productos disponibles",
+        "error": "Error al cargar productos",
+        "retry": "Reintentar"
+    },
+    "product": {
+        "quantity": "Cantidad",
+        "addToCart": "Añadir al Carrito",
+        "price": "Precio",
+        "description": "Descripción",
+        "category": "Categoría"
+    },
+    "cart": {
+        "title": "Carrito de Compras",
+        "empty": "Tu carrito está vacío",
+        "total": "Total",
+        "checkout": "Pagar",
+        "remove": "Eliminar",
+        "clear": "Vaciar Carrito"
+    },
+    "settings": {
+        "title": "Configuración",
+        "language": "Idioma",
+        "theme": "Tema",
+        "notifications": "Notificaciones",
+        "about": "Acerca de"
+    },
+    "common": {
+        "ok": "OK",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "done": "Hecho",
+        "close": "Cerrar",
+        "search": "Buscar"
+    },
+    "error": {
+        "network": "Error de Red",
+        "unknown": "Error Desconocido",
+        "tryAgain": "Por favor, inténtalo de nuevo"
+    }
+}
