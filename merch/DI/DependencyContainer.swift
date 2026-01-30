@@ -42,23 +42,34 @@ private struct ServiceRegistration {
 
 // MARK: - Dependency Container
 
-/// A type-safe Dependency Injection container using ObjectIdentifier for better type safety.
-actor DependencyContainer {
+/// A thread-safe Dependency Injection container using NSRecursiveLock.
+class DependencyContainer {
     static let shared = DependencyContainer()
 
     private var registrations: [ObjectIdentifier: ServiceRegistration] = [:]
+    private let lock = NSRecursiveLock()
 
     private init() {
         // Register default services
-        Task {
-            await registerDefaults()
-        }
+        registerDefaults()
     }
 
     /// Registers default services for the app
     private func registerDefaults() {
-        register(ProductService.self, scope: .singleton) {
-            MockProductService()
+        // Toggle this to switch between Mock and Real API
+        // For POC, we default to Mock. In production, this could be controlled by build configurations or flags.
+        let useMock = !ProcessInfo.processInfo.arguments.contains("-useRealAPI")
+
+        if useMock {
+            print("DI: Registering MockProductService")
+            register(ProductService.self, scope: .singleton) {
+                MockProductService()
+            }
+        } else {
+            print("DI: Registering APIProductService")
+            register(ProductService.self, scope: .singleton) {
+                APIProductService()
+            }
         }
     }
 
@@ -68,6 +79,9 @@ actor DependencyContainer {
     ///   - scope: The lifecycle scope of the service (singleton or transient)
     ///   - factory: A closure that creates an instance of the service
     func register<T>(_ type: T.Type, scope: ServiceScope = .singleton, factory: @escaping () -> T) {
+        lock.lock()
+        defer { lock.unlock() }
+
         let key = ObjectIdentifier(type)
         registrations[key] = ServiceRegistration(scope: scope, factory: factory)
     }
@@ -77,6 +91,9 @@ actor DependencyContainer {
     ///   - type: The protocol or class type to register
     ///   - instance: The concrete instance to register
     func register<T>(_ type: T.Type, instance: T) {
+        lock.lock()
+        defer { lock.unlock() }
+
         let key = ObjectIdentifier(type)
         var registration = ServiceRegistration(scope: .singleton) { instance }
         registration.cachedInstance = instance
@@ -88,6 +105,9 @@ actor DependencyContainer {
     /// - Returns: An instance of the requested type
     /// - Throws: DIError if the service is not registered
     func resolve<T>(_ type: T.Type) throws -> T {
+        lock.lock()
+        defer { lock.unlock() }
+
         let key = ObjectIdentifier(type)
 
         guard var registration = registrations[key] else {
@@ -139,6 +159,9 @@ actor DependencyContainer {
     /// - Parameter type: The type to check
     /// - Returns: True if the service is registered
     func isRegistered<T>(_ type: T.Type) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+
         let key = ObjectIdentifier(type)
         return registrations[key] != nil
     }
@@ -146,12 +169,18 @@ actor DependencyContainer {
     /// Unregisters a service
     /// - Parameter type: The type to unregister
     func unregister<T>(_ type: T.Type) {
+        lock.lock()
+        defer { lock.unlock() }
+
         let key = ObjectIdentifier(type)
         registrations.removeValue(forKey: key)
     }
 
     /// Clears all registrations (useful for testing)
     func reset() {
+        lock.lock()
+        defer { lock.unlock() }
+
         registrations.removeAll()
     }
 }
@@ -167,7 +196,6 @@ struct Injected<T> {
     public var wrappedValue: T {
         mutating get {
             if service == nil {
-                // Use a synchronous wrapper for the async actor call
                 service = resolveService()
             }
             return service!
@@ -178,22 +206,11 @@ struct Injected<T> {
     }
 
     private func resolveService() -> T {
-        // This is a workaround since property wrappers can't be async
-        // In production, consider using a different pattern or Swift 6 features
-        let semaphore = DispatchSemaphore(value: 0)
-        var resolved: T?
-
-        Task {
-            do {
-                resolved = try await DependencyContainer.shared.resolve(T.self)
-            } catch {
-                fatalError("Failed to resolve dependency: \(error.localizedDescription)")
-            }
-            semaphore.signal()
+        do {
+            return try DependencyContainer.shared.resolve(T.self)
+        } catch {
+            fatalError("Failed to resolve dependency: \(error.localizedDescription)")
         }
-
-        semaphore.wait()
-        return resolved!
     }
 
     public init() {
@@ -205,10 +222,10 @@ struct Injected<T> {
 
 extension DependencyContainer {
     /// Convenience method for registering multiple services at once
-    func registerServices(@ServiceBuilder _ builder: () -> [ServiceRegistrationItem]) async {
+    func registerServices(@ServiceBuilder _ builder: () -> [ServiceRegistrationItem]) {
         let items = builder()
         for item in items {
-            await item.register(in: self)
+            item.register(in: self)
         }
     }
 }
@@ -223,7 +240,7 @@ struct ServiceBuilder {
 }
 
 protocol ServiceRegistrationItem {
-    func register(in container: DependencyContainer) async
+    func register(in container: DependencyContainer)
 }
 
 struct ServiceRegistrationWrapper<T>: ServiceRegistrationItem {
@@ -231,7 +248,7 @@ struct ServiceRegistrationWrapper<T>: ServiceRegistrationItem {
     let scope: ServiceScope
     let factory: () -> T
 
-    func register(in container: DependencyContainer) async {
-        await container.register(type, scope: scope, factory: factory)
+    func register(in container: DependencyContainer) {
+        container.register(type, scope: scope, factory: factory)
     }
 }

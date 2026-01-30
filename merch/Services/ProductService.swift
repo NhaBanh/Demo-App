@@ -64,18 +64,25 @@ class MockProductService: ProductService {
     }
 }
 
-// MARK: - Real API Product Service (Template)
+// MARK: - Real API Product Service
 
 class APIProductService: ProductService {
-    private let baseURL = "https://api.example.com"
+    private let baseURL: URL
+    private let session: URLSession
+
+    init(baseURL: String = "https://api.example.com", session: URLSession = .shared) {
+        guard let url = URL(string: baseURL) else {
+            fatalError("Invalid Base URL: \(baseURL)")
+        }
+        self.baseURL = url
+        self.session = session
+    }
 
     func fetchProducts() async throws -> [Product] {
-        guard let url = URL(string: "\(baseURL)/products") else {
-            throw NetworkError.invalidURL
-        }
+        let url = baseURL.appendingPathComponent("products")
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await session.data(from: url)
 
             // Check HTTP response
             guard let httpResponse = response as? HTTPURLResponse else {
@@ -113,12 +120,10 @@ class APIProductService: ProductService {
     }
 
     func fetchProduct(id: String) async throws -> Product {
-        guard let url = URL(string: "\(baseURL)/products/\(id)") else {
-            throw NetworkError.invalidURL
-        }
+        let url = baseURL.appendingPathComponent("products").appendingPathComponent(id)
 
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await session.data(from: url)
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw NetworkError.invalidResponse
@@ -151,4 +156,3 @@ class APIProductService: ProductService {
         }
     }
 }
-
