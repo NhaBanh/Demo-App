@@ -6,7 +6,7 @@ import Foundation
 enum DIResolver {
 
     /// Resolves a dependency from the DI container synchronously
-    /// This is a convenience wrapper around the async DependencyContainer
+    /// This is a convenience wrapper around the DependencyContainer
     ///
     /// Usage:
     /// ```swift
@@ -15,30 +15,11 @@ enum DIResolver {
     /// }
     /// ```
     static func resolve<T>(_ type: T.Type = T.self) -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        var resolved: T?
-        var resolutionError: Error?
-
-        Task {
-            do {
-                resolved = try await DependencyContainer.shared.resolve(type)
-            } catch {
-                resolutionError = error
-            }
-            semaphore.signal()
-        }
-
-        semaphore.wait()
-
-        if let error = resolutionError {
+        do {
+            return try DependencyContainer.shared.resolve(type)
+        } catch {
             fatalError("Failed to resolve \(type): \(error.localizedDescription)")
         }
-
-        guard let service = resolved else {
-            fatalError("Failed to resolve \(type): Unknown error")
-        }
-
-        return service
     }
 
     /// Resolves a dependency with a default fallback
@@ -51,16 +32,7 @@ enum DIResolver {
     /// }
     /// ```
     static func resolve<T>(default defaultValue: T) -> T {
-        let semaphore = DispatchSemaphore(value: 0)
-        var resolved: T?
-
-        Task {
-            resolved = await DependencyContainer.shared.resolve(T.self, default: defaultValue)
-            semaphore.signal()
-        }
-
-        semaphore.wait()
-        return resolved ?? defaultValue
+        return DependencyContainer.shared.resolve(T.self, default: defaultValue)
     }
 
     /// Resolves a dependency asynchronously (for use in async contexts)
@@ -70,19 +42,19 @@ enum DIResolver {
     /// let service = try await DIResolver.resolveAsync(ProductService.self)
     /// ```
     static func resolveAsync<T>(_ type: T.Type = T.self) async throws -> T {
-        return try await DependencyContainer.shared.resolve(type)
+        return try DependencyContainer.shared.resolve(type)
     }
 
     /// Checks if a dependency is registered
     ///
     /// Usage:
     /// ```swift
-    /// if await DIResolver.isRegistered(ProductService.self) {
+    /// if DIResolver.isRegistered(ProductService.self) {
     ///     // Use the service
     /// }
     /// ```
-    static func isRegistered<T>(_ type: T.Type) async -> Bool {
-        return await DependencyContainer.shared.isRegistered(type)
+    static func isRegistered<T>(_ type: T.Type) -> Bool {
+        return DependencyContainer.shared.isRegistered(type)
     }
 }
 
@@ -95,5 +67,3 @@ infix operator ~>: NilCoalescingPrecedence
 func ~> <T>(lhs: T?, rhs: T.Type) -> T {
     return lhs ?? DIResolver.resolve(rhs)
 }
-
-
