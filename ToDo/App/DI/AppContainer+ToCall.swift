@@ -1,9 +1,9 @@
 import Foundation
 
 extension AppContainer {
-    func makeToCallViewModel() -> ToCallViewModel {
-        ToCallViewModel(
-            loadPage: LoadToCallPageUseCase(repository: toCallRepository),
+    func makeToCallViewModel() -> CallViewModel {
+        CallViewModel(
+            repository: toCallRepository,
             connectivityMonitor: connectivityMonitor
         )
     }

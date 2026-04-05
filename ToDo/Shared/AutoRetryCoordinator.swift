@@ -16,6 +16,34 @@ import Foundation
 /// this type owns the retry state machine itself.
 @MainActor
 final class AutoRetryCoordinator {
+    struct RetryPolicy {
+        let retrySchedule: [TimeInterval]
+        let retriesOnReconnect: Bool
+        let emitsStatusMessages: Bool
+    }
+
+    enum RetryPolicyPreset {
+        case userFacing
+        case backgroundSync
+
+        var policy: RetryPolicy {
+            switch self {
+            case .userFacing:
+                RetryPolicy(
+                    retrySchedule: [3, 5, 10],
+                    retriesOnReconnect: true,
+                    emitsStatusMessages: true
+                )
+            case .backgroundSync:
+                RetryPolicy(
+                    retrySchedule: [],
+                    retriesOnReconnect: false,
+                    emitsStatusMessages: false
+                )
+            }
+        }
+    }
+
     /// An async operation that performs a single retry attempt.
     typealias RetryOperation = @Sendable () async -> Void
 
@@ -26,7 +54,7 @@ final class AutoRetryCoordinator {
     typealias RetryableErrorEvaluator = (Error) -> Bool
 
     private let connectivityMonitor: ConnectivityMonitoring
-    private let retrySchedule: [TimeInterval]
+    private let policy: RetryPolicy
     private let isRetryableError: RetryableErrorEvaluator
     private let statusHandler: StatusHandler
 
@@ -39,18 +67,31 @@ final class AutoRetryCoordinator {
     ///
     /// - Parameters:
     ///   - connectivityMonitor: A service that reports current network reachability.
-    ///   - retrySchedule: Delay values in seconds for successive retry attempts.
-    ///     Once the schedule is exhausted, the last value is reused.
+    ///   - policyPreset: Named retry behavior tuned for a product scenario.
     ///   - isRetryableError: A closure that determines whether an error should be retried.
     ///   - statusHandler: A closure used to publish retry status back to the caller.
+    convenience init(
+        connectivityMonitor: ConnectivityMonitoring,
+        policyPreset: RetryPolicyPreset = .userFacing,
+        isRetryableError: @escaping RetryableErrorEvaluator,
+        statusHandler: @escaping StatusHandler
+    ) {
+        self.init(
+            connectivityMonitor: connectivityMonitor,
+            policy: policyPreset.policy,
+            isRetryableError: isRetryableError,
+            statusHandler: statusHandler
+        )
+    }
+
     init(
         connectivityMonitor: ConnectivityMonitoring,
-        retrySchedule: [TimeInterval] = [5, 10, 20, 40, 60],
+        policy: RetryPolicy,
         isRetryableError: @escaping RetryableErrorEvaluator,
         statusHandler: @escaping StatusHandler
     ) {
         self.connectivityMonitor = connectivityMonitor
-        self.retrySchedule = retrySchedule
+        self.policy = policy
         self.isRetryableError = isRetryableError
         self.statusHandler = statusHandler
         bindConnectivity()
@@ -62,7 +103,7 @@ final class AutoRetryCoordinator {
         scheduledRetryTask = nil
         pendingRetry = nil
         attempt = 0
-        statusHandler(nil)
+        reportStatus(nil)
     }
 
     /// Processes a failure and starts automatic retry behavior when appropriate.
@@ -78,6 +119,11 @@ final class AutoRetryCoordinator {
             return false
         }
 
+        guard !policy.retrySchedule.isEmpty || policy.retriesOnReconnect else {
+            reset()
+            return false
+        }
+
         pendingRetry = retry
         scheduleRetryIfNeeded()
         return true
@@ -89,10 +135,11 @@ final class AutoRetryCoordinator {
             .dropFirst()
             .sink { [weak self] isConnected in
                 guard let self else { return }
+                guard self.policy.retriesOnReconnect else { return }
                 guard isConnected, let retry = self.pendingRetry else { return }
                 self.scheduledRetryTask?.cancel()
                 self.scheduledRetryTask = nil
-                self.statusHandler("Connection restored. Retrying now...")
+                self.reportStatus("Connection restored. Retrying now...")
                 Task {
                     await retry()
                 }
@@ -107,13 +154,19 @@ final class AutoRetryCoordinator {
         scheduledRetryTask = nil
 
         guard connectivityMonitor.isConnected else {
-            statusHandler("Waiting for network connection to retry.")
+            reportStatus("Waiting for network connection to retry.")
+            return
+        }
+
+        guard attempt < policy.retrySchedule.count else {
+            pendingRetry = nil
+            reportStatus("Retry stopped after repeated failures.")
             return
         }
 
         let delay = retryDelay(for: attempt)
         attempt += 1
-        statusHandler("Temporary network issue. Retrying in \(Int(delay))s...")
+        reportStatus("Temporary network issue. Retrying in \(Int(delay))s...")
 
         scheduledRetryTask = Task {
             do {
@@ -127,9 +180,11 @@ final class AutoRetryCoordinator {
     }
 
     private func retryDelay(for attempt: Int) -> TimeInterval {
-        if attempt < retrySchedule.count {
-            return retrySchedule[attempt]
-        }
-        return 60
+        policy.retrySchedule[attempt]
+    }
+
+    private func reportStatus(_ message: String?) {
+        guard policy.emitsStatusMessages else { return }
+        statusHandler(message)
     }
 }
