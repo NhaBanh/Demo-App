@@ -16,6 +16,7 @@ Run locally:
 ## Mock API / Data Setup
 
 No separate backend service is required.
+No manual mock-data setup is required either, because the project already includes the in-app mock services and seeded sample data needed for local development and review.
 
 The project uses in-app mock remote services for the API-backed modules:
 
