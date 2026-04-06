@@ -79,8 +79,7 @@ The overall direction is to reduce accidental complexity, keep feature ownership
 Architecture documentation:
 
 - [ArchitectureGuideline.md](docs/ArchitectureGuideline.md)
-- [project-structure.md](docs/project-structure.md)
-- [docs/adr/README.md](docs/adr/README.md)
+- [project-structure.md](docs/ProjectStructure.md)
 
 ## Tests
 
